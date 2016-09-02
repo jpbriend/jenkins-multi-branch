@@ -1,9 +1,9 @@
 def jettyUrl = 'http://localhost:8081/'
 
 stage 'Dev'
-node {
+node('maven') {
     checkout scm
-    mvn 'clean package'
+    sh 'mvn clean package'
     archive 'target/x.war'
 }
 
@@ -28,7 +28,7 @@ try {
 }
 
 stage name: 'Staging', concurrency: 1
-node {
+node('maven') {
     deploy 'staging'
 }
 input message: "Does staging look good?"
@@ -39,19 +39,15 @@ try {
 }
 
 stage name: 'Production', concurrency: 1
-node {
+node('maven') {
     //sh "wget -O - -S ${jettyUrl}staging/"
     echo 'Production server looks to be alive'
     deploy 'production'
     echo "Deployed to ${jettyUrl}production/"
 }
 
-def mvn(args) {
-    sh "${tool 'Maven 3.x'}/bin/mvn ${args}"
-}
-
 def runTests(duration) {
-    node {
+    node('maven') {
         checkout scm
         sh "sleep ${duration}"
         /*
